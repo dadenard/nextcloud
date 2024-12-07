@@ -1,0 +1,57 @@
+services:
+  db:
+    image: mariadb:lts
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+        MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+        MYSQL_DATABASE: ${DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        REDIS_HOST: ${REDISHOST}
+  
+  redis:
+    image: redis:alpine
+    restart: always
+  
+  app:
+    image: nextcloud:fpm-alpine
+    restart: always
+    links:
+      - db
+    volumes:
+      - ./nextcloud:/var/www/html
+    environment:
+        MYSQL_HOST: ${DBHOST}
+        MYSQL_DATABASE: ${DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        PHP_MEMORY_LIMIT: ${PHPMEMLIM}
+        PHP_UPLOAD_LIMIT: ${PHPULIM}
+        REDIS_HOST: ${REDISHOST}
+    depends_on:
+      - db
+      - redis
+
+  web:
+    build: ./nginx
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./nextcloud:/var/www/html
+    depends_on:
+      - app
+
+
+  cron:
+    image: nextcloud:fpm-alpine
+    restart: always
+    volumes:
+      - ./nextcloud:/var/www/html
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+      - redis
