@@ -23,6 +23,7 @@ services:
       - ./nextcloud:/var/www/html
     environment:
       - MYSQL_HOST=db
+      - MYSQL_DATABASE=nextcloud
       - REDIS_HOST=redis
     env_file:
       - .env
