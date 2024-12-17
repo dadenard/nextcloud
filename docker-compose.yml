@@ -21,6 +21,7 @@ services:
     restart: always
     volumes:
       - ./nextcloud:/var/www/html
+      - ./data:/var/www/html/data
     environment:
       - MYSQL_HOST=db
       - MYSQL_DATABASE=nextcloud
